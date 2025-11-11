@@ -1,17 +1,20 @@
 apply plugin: 'com.android.application'
 
-
 import com.android.sdklib.BuildToolInfo
 import java.lang.reflect.Method
+import org.gradle.api.Task
 
-Task modifyAaptPathTask = task('modifyAaptPath') << {
+// 正确注册自定义 Task
+tasks.register('modifyAaptPath', Task) {
+  doLast {
     android.applicationVariants.all { variant ->
-        BuildToolInfo buildToolInfo = variant.androidBuilder.getTargetInfo().getBuildTools()
-        Method addMethod = BuildToolInfo.class.getDeclaredMethod("add", BuildToolInfo.PathId.class, File.class)
-        addMethod.setAccessible(true)
-        addMethod.invoke(buildToolInfo, BuildToolInfo.PathId.AAPT, new File(rootDir, "aapt_mac"))
-        println "[LOG] new aapt path = " + buildToolInfo.getPath(BuildToolInfo.PathId.AAPT)
+      def buildToolInfo = variant.androidBuilder.getTargetInfo().getBuildTools()
+      def addMethod = BuildToolInfo.class.getDeclaredMethod("add", BuildToolInfo.PathId.class, File.class)
+      addMethod.setAccessible(true)
+      addMethod.invoke(buildToolInfo, BuildToolInfo.PathId.AAPT, new File(rootDir, "aapt_mac"))
+      println "[LOG] new aapt path = " + buildToolInfo.getPath(BuildToolInfo.PathId.AAPT)
     }
+  }
 }
 
 android {
@@ -47,10 +50,10 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-    compile 'com.android.support:appcompat-v7:25.2.0'
-    compile project(path: ':mypluginlibrary')
+  implementation fileTree(dir: 'libs', include: ['*.jar'])
+  testImplementation 'junit:junit:4.12'
+  implementation 'com.android.support:appcompat-v7:25.2.0'
+  implementation project(path: ':mypluginlibrary')
 }
 
 assemble.doLast {
